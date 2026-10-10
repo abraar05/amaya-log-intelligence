@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Amaya Log Intelligence — Demo</title>
+<meta name="description" content="Operational reporting portal demo for multi-department device and IMEI data.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar" id="sidebar">
+  <a class="brand" href="#overview"><span class="brand-mark"><i data-lucide="layers-3"></i></span><span><b>AMAYA</b><small>LOG INTELLIGENCE</small></span></a>
+  <div class="workspace"><span class="workspace-icon">A</span><span><b>Amaya Distribution</b><small>Operations workspace · Demo</small></span><i data-lucide="chevrons-up-down"></i></div>
+  <div class="nav-label">WORKSPACE</div>
+  <nav>
+    <a class="nav-item" data-route="overview" href="#overview"><i data-lucide="layout-dashboard"></i><span>Overview</span></a>
+    <a class="nav-item" data-route="departments" href="#departments"><i data-lucide="building-2"></i><span>Departments</span></a>
+    <a class="nav-item" data-route="sources" href="#sources"><i data-lucide="database"></i><span>Data sources</span></a>
+    <a class="nav-item" data-route="reconciliation" href="#reconciliation"><i data-lucide="scan-line"></i><span>IMEI reconciliation</span></a>
+    <a class="nav-item" data-route="reports" href="#reports"><i data-lucide="chart-no-axes-combined"></i><span>Reports &amp; insights</span></a>
+    <a class="nav-item" data-route="data-quality" href="#data-quality"><i data-lucide="shield-check"></i><span>Data quality</span><em class="nav-count" id="navIssueCount" hidden>0</em></a>
+    <a class="nav-item" data-route="activity" href="#activity"><i data-lucide="history"></i><span>Activity log</span></a>
+    <a class="nav-item" data-route="settings" href="#settings"><i data-lucide="settings"></i><span>Settings</span></a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="sync-status"><span class="pulse"></span><span><b>Workspace status</b><small id="syncStatusText">Demo mode · local storage</small></span></div>
+    <a class="profile" href="#settings"><div class="avatar">AA</div><span><b>Operations Admin</b><small>Demo workspace</small></span><i data-lucide="more-horizontal"></i></a>
+  </div>
+</aside>
+<main class="main">
+<header class="topbar">
+  <button class="icon-btn mobile-menu" id="menuToggle" aria-label="Open menu"><i data-lucide="menu"></i></button>
+  <div class="breadcrumbs"><span>Workspace</span><i data-lucide="chevron-right"></i><b id="crumbLabel">Overview</b></div>
+  <div class="top-actions">
+    <div class="searchbox"><i data-lucide="search"></i><input id="globalSearch" placeholder="Search records, IMEIs..." aria-label="Search"></div>
+    <button class="icon-btn" id="themeToggle" title="Toggle theme"><i data-lucide="sun-moon"></i></button>
+    <button class="icon-btn notification" title="Notifications"><i data-lucide="bell"></i><span></span></button>
+    <div class="top-avatar">AA</div>
+  </div>
+</header>
+<section class="content">
+
+<!-- ============ OVERVIEW ============ -->
+<section class="view" id="view-overview">
+  <div class="page-heading">
+    <div><div class="eyebrow">LIVE WORKSPACE <span class="live-dot"></span></div><h1>Good morning, team <span class="wave">✦</span></h1><p>Your operational picture, brought together in one place.</p></div>
+    <div class="heading-actions">
+      <button class="btn btn-secondary" onclick="window.print()"><i data-lucide="download"></i> Export overview</button>
+      <a class="btn btn-primary" href="#sources"><i data-lucide="plus"></i> Connect data source</a>
+    </div>
+  </div>
+  <div class="banner"><div class="banner-icon"><i data-lucide="sparkles"></i></div><div class="banner-copy"><b>Your operations briefing</b><p id="briefingText">Import a CSV to populate this workspace with live operational metrics.</p></div><a href="#data-quality" class="banner-link">Review insights <i data-lucide="arrow-up-right"></i></a></div>
+  <div class="section-head"><div><h2>Executive overview</h2><p>Key metrics across connected operations</p></div></div>
+  <div class="metrics-grid">
+    <article class="metric-card"><div class="metric-top"><span>Records processed</span><span class="metric-icon blue"><i data-lucide="database"></i></span></div><div class="metric-value" id="kpiRecords">0</div><div class="metric-foot"><span id="kpiSourcesNote">0 sources</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>IMEI reconciliation</span><span class="metric-icon green"><i data-lucide="scan-line"></i></span></div><div class="metric-value" id="kpiMatch">—<span class="unit" id="kpiMatchUnit">%</span></div><div class="metric-foot"><span>target: 98%</span><div class="mini-progress"><span id="kpiMatchBar" style="width:0%"></span></div></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Data quality flags</span><span class="metric-icon amber"><i data-lucide="shield-alert"></i></span></div><div class="metric-value" id="kpiIssues">0</div><div class="metric-foot"><span class="trend caution" id="kpiIssueNote">No open issues</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Duplicate IMEIs</span><span class="metric-icon red"><i data-lucide="copy"></i></span></div><div class="metric-value" id="kpiDupes">0</div><div class="metric-foot"><span>Need deduplication review</span></div></article>
+  </div>
+  <div class="dashboard-grid">
+    <article class="panel performance-panel">
+      <div class="panel-heading"><div><h3>Operational activity</h3><p>Import batches and matched identifiers</p></div></div>
+      <div class="chart-legend"><span><i class="legend-dot primary-dot"></i> Records imported</span><span><i class="legend-dot secondary-dot"></i> Matched records</span></div>
+      <div class="chart-wrap"><canvas id="activityChart" height="230"></canvas></div>
+    </article>
+    <article class="panel department-panel">
+      <div class="panel-heading"><div><h3>Department health</h3><p>Operational readiness by team</p></div><a href="#departments" class="text-link">View all</a></div>
+      <div id="deptHealth"></div>
+    </article>
+  </div>
+  <div class="dashboard-grid lower-grid">
+    <article class="panel">
+      <div class="panel-heading"><div><h3>Recent activity</h3><p>Latest changes across your workspace</p></div><a href="#activity" class="text-link">Activity log</a></div>
+      <div class="activity-list" id="overviewActivity"></div>
+    </article>
+    <article class="panel insights-panel">
+      <div class="panel-heading"><div><h3>Intelligence notes</h3><p>Signals worth your attention</p></div><span class="ai-badge"><i data-lucide="sparkles"></i> INSIGHTS</span></div>
+      <div id="insights"></div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ DEPARTMENTS ============ -->
+<section class="view" id="view-departments" hidden>
+  <div class="page-heading"><div><div class="eyebrow">WORKSPACE / ORGANIZATION</div><h1>Departments</h1><p>Monitor operational performance and data readiness across teams.</p></div></div>
+  <div class="metrics-grid compact-metrics">
+    <article class="metric-card"><div class="metric-top"><span>Total departments</span><span class="metric-icon blue"><i data-lucide="building-2"></i></span></div><div class="metric-value" id="deptCount">0</div><div class="metric-foot"><span>Across the workspace</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Data sources</span><span class="metric-icon green"><i data-lucide="database"></i></span></div><div class="metric-value" id="deptSourceCount">0</div><div class="metric-foot"><span>Registered sources</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Records held</span><span class="metric-icon violet"><i data-lucide="layers"></i></span></div><div class="metric-value" id="deptRecordCount">0</div><div class="metric-foot"><span>Imported rows</span></div></article>
+  </div>
+  <div class="panel table-panel">
+    <div class="panel-heading"><div><h3>Department directory</h3><p>Department-level ownership and source status</p></div>
+      <div class="table-tools"><input class="table-search" placeholder="Filter departments..." data-filter="departmentTable"><button class="btn btn-secondary" onclick="exportTable('departmentTable','departments.csv')"><i data-lucide="download"></i> Export</button></div>
+    </div>
+    <div class="table-scroll"><table id="departmentTable"><thead><tr><th>Department</th><th>Data sources</th><th>Records</th><th>Last update</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ SOURCES ============ -->
+<section class="view" id="view-sources" hidden>
+  <div class="page-heading"><div><div class="eyebrow">DATA FOUNDATION</div><h1>Data sources</h1><p>Connect, validate, and manage the operational data behind your reports.</p></div><button class="btn btn-primary" onclick="openModal('sourceModal')"><i data-lucide="plus"></i> Add source</button></div>
+  <div class="banner subtle-banner"><div class="banner-icon"><i data-lucide="refresh-cw"></i></div><div class="banner-copy"><b>Keep your data current</b><p>Register a source, then import a CSV export. Data stays in this browser — nothing is uploaded to a server.</p></div></div>
+  <div class="panel table-panel">
+    <div class="panel-heading"><div><h3>Connected sources</h3><p id="sourceCountLabel">0 registered</p></div>
+      <div class="table-tools"><input class="table-search" placeholder="Search sources..." data-filter="sourcesTable"><button class="btn btn-secondary" onclick="document.getElementById('csvFile').click()"><i data-lucide="upload"></i> Import CSV</button><input type="file" id="csvFile" accept=".csv,text/csv" hidden></div>
+    </div>
+    <div class="table-scroll"><table id="sourcesTable"><thead><tr><th>Source</th><th>Department</th><th>Type</th><th>Records</th><th>Last import</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="panel import-panel">
+    <div class="panel-heading"><div><h3>Import a CSV file</h3><p>Upload an exported Google Sheets or Excel CSV for validation.</p></div><span class="pill pill-blue">CSV supported</span></div>
+    <label class="dropzone" for="csvFile"><i data-lucide="cloud-upload"></i><b>Choose a CSV file to import</b><span>Export .xlsx to CSV first · Parsed locally in your browser</span><span class="btn btn-secondary">Browse files</span></label>
+    <div id="fileInfo" class="file-info"></div>
+  </div>
+  <div class="modal-backdrop" id="sourceModal">
+    <div class="modal">
+      <div class="modal-heading"><div><h3>Register a data source</h3><p>Connect a sheet or prepare a manual import.</p></div><button class="icon-btn" onclick="closeModal('sourceModal')"><i data-lucide="x"></i></button></div>
+      <form id="sourceForm">
+        <label>Source name<input id="srcName" required placeholder="e.g. Daily IMEI Movement"></label>
+        <label>Department<select id="srcDept"></select></label>
+        <label>Source type<select id="srcType"><option>Manual CSV upload</option><option>Google Sheets CSV URL</option></select></label>
+        <label>Published CSV URL<input id="srcUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"></label>
+        <div class="form-note"><i data-lucide="info"></i> A static demo cannot fetch remote URLs. Register the source here, then import the CSV export manually.</div>
+        <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal('sourceModal')">Cancel</button><button type="submit" class="btn btn-primary">Save source</button></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RECONCILIATION ============ -->
+<section class="view" id="view-reconciliation" hidden>
+  <div class="page-heading"><div><div class="eyebrow">LOGISTICS CONTROL</div><h1>IMEI reconciliation</h1><p>Match device identifiers to sales, transfer, and inventory records.</p></div><button class="btn btn-primary" onclick="document.getElementById('csvFile').click()"><i data-lucide="upload"></i> Import records</button></div>
+  <div class="metrics-grid">
+    <article class="metric-card"><div class="metric-top"><span>Matched records</span><span class="metric-icon green"><i data-lucide="check-circle-2"></i></span></div><div class="metric-value" id="recMatched">0</div><div class="metric-foot"><span class="trend positive" id="recRate">0% match rate</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Unmatched</span><span class="metric-icon amber"><i data-lucide="circle-help"></i></span></div><div class="metric-value" id="recUnmatched">0</div><div class="metric-foot"><span>Require invoice matching</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Duplicate identifiers</span><span class="metric-icon red"><i data-lucide="copy"></i></span></div><div class="metric-value" id="recDupes">0</div><div class="metric-foot"><span>Across current data set</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Unmapped IMEIs</span><span class="metric-icon violet"><i data-lucide="scan-search"></i></span></div><div class="metric-value" id="recUnmapped">0</div><div class="metric-foot"><span>Pending label validation</span></div></article>
+  </div>
+  <div class="panel table-panel">
+    <div class="panel-heading"><div><h3>Reconciliation queue</h3><p>Live view of imported identifiers</p></div>
+      <div class="table-tools"><input class="table-search" placeholder="Search IMEI or invoice..." data-filter="imeiTable"><select id="statusFilter" class="select-control"><option value="">All statuses</option><option>Matched</option><option>Unmatched</option><option>Duplicate</option></select></div>
+    </div>
+    <div class="table-scroll"><table id="imeiTable"><thead><tr><th>IMEI / Serial</th><th>Device</th><th>Invoice</th><th>Source</th><th>Match status</th></tr></thead><tbody></tbody></table></div>
+    <div class="table-footer"><span id="recFooter">No records imported</span><button class="btn btn-secondary" onclick="exportTable('imeiTable','imei-reconciliation.csv')"><i data-lucide="download"></i> Export CSV</button></div>
+  </div>
+</section>
+
+<!-- ============ REPORTS ============ -->
+<section class="view" id="view-reports" hidden>
+  <div class="page-heading"><div><div class="eyebrow">DECISION SUPPORT</div><h1>Reports &amp; insights</h1><p>Turn operational data into a clear, decision-ready view.</p></div></div>
+  <div class="report-grid">
+    <article class="report-card"><div class="report-icon blue"><i data-lucide="chart-no-axes-combined"></i></div><h3>Executive operations summary</h3><p>Cross-department performance, risks, and key movements.</p><button class="text-link" onclick="go('overview')">Open report <i data-lucide="arrow-up-right"></i></button></article>
+    <article class="report-card"><div class="report-icon green"><i data-lucide="scan-line"></i></div><h3>IMEI reconciliation report</h3><p>Matched, unmatched, duplicate, and unmapped identifiers.</p><button class="text-link" onclick="go('reconciliation')">Open report <i data-lucide="arrow-up-right"></i></button></article>
+    <article class="report-card"><div class="report-icon violet"><i data-lucide="package"></i></div><h3>Stock movement report</h3><p>Daily inbound/outbound volume and inventory changes.</p><button class="text-link" onclick="go('reconciliation')">Open report <i data-lucide="arrow-up-right"></i></button></article>
+    <article class="report-card"><div class="report-icon amber"><i data-lucide="shield-check"></i></div><h3>Data quality report</h3><p>Missing fields, invalid values, duplicates, and stale sources.</p><button class="text-link" onclick="go('data-quality')">Open report <i data-lucide="arrow-up-right"></i></button></article>
+    <article class="report-card"><div class="report-icon blue"><i data-lucide="building-2"></i></div><h3>Department performance</h3><p>Source freshness, data completeness, and operational score.</p><button class="text-link" onclick="go('departments')">Open report <i data-lucide="arrow-up-right"></i></button></article>
+    <article class="report-card"><div class="report-icon gray"><i data-lucide="sliders-horizontal"></i></div><h3>Custom report builder</h3><p>Choose fields, filters, grouping, and export format.</p><button class="text-link" onclick="showToast('Custom report builder is not part of this demo.')">Open report <i data-lucide="arrow-up-right"></i></button></article>
+  </div>
+</section>
+
+<!-- ============ DATA QUALITY ============ -->
+<section class="view" id="view-data-quality" hidden>
+  <div class="page-heading"><div><div class="eyebrow">TRUST &amp; GOVERNANCE</div><h1>Data quality</h1><p>Find inconsistencies before they affect decisions or stock reconciliation.</p></div><button class="btn btn-primary" onclick="runQualityScan()"><i data-lucide="scan-search"></i> Run quality scan</button></div>
+  <div class="metrics-grid">
+    <article class="metric-card"><div class="metric-top"><span>Quality score</span><span class="metric-icon green"><i data-lucide="shield-check"></i></span></div><div class="metric-value" id="dqScore">—<span class="unit">%</span></div><div class="metric-foot"><span id="dqWeight">No scan run yet</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Open issues</span><span class="metric-icon amber"><i data-lucide="alert-circle"></i></span></div><div class="metric-value" id="dqIssues">0</div><div class="metric-foot"><span>From latest scan</span></div></article>
+    <article class="metric-card"><div class="metric-top"><span>Duplicate IMEIs</span><span class="metric-icon red"><i data-lucide="copy"></i></span></div><div class="metric-value" id="dqDupes">0</div><div class="metric-foot"><span>Need deduplication review</span></div></article>
+  </div>
+  <div class="panel"><div class="panel-heading"><div><h3>Issues requiring attention</h3><p>Prioritized by potential operational impact</p></div><span class="pill pill-amber" id="dqPill">0 open items</span></div><div class="issue-list" id="dqList"></div></div>
+</section>
+
+<!-- ============ ACTIVITY ============ -->
+<section class="view" id="view-activity" hidden>
+  <div class="page-heading"><div><div class="eyebrow">AUDIT &amp; TRACEABILITY</div><h1>Activity log</h1><p>A chronological view of imports and operational checks.</p></div><button class="btn btn-secondary" onclick="exportTable('activityTable','activity-log.csv')"><i data-lucide="download"></i> Export log</button></div>
+  <div class="panel table-panel">
+    <div class="panel-heading"><div><h3>Recent events</h3><p>Stored locally in this browser</p></div><button class="btn btn-secondary" onclick="clearActivity()"><i data-lucide="trash-2"></i> Clear log</button></div>
+    <div class="table-scroll"><table id="activityTable"><thead><tr><th>Event</th><th>Detail</th><th>Timestamp</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section class="view" id="view-settings" hidden>
+  <div class="page-heading"><div><div class="eyebrow">WORKSPACE CONFIGURATION</div><h1>Settings</h1><p>Manage workspace preferences and local data.</p></div></div>
+  <div class="settings-grid">
+    <div class="panel settings-nav">
+      <a class="settings-tab selected">General workspace</a>
+      <a class="settings-tab" onclick="showToast('Data governance is part of the full deployment, not this demo.')">Data governance</a>
+      <a class="settings-tab" onclick="showToast('Reporting defaults are part of the full deployment, not this demo.')">Reporting defaults</a>
+      <a class="settings-tab" onclick="showToast('Roles and permissions require a server.')">Access &amp; roles</a>
+      <a class="settings-tab" onclick="showToast('Remote integrations require a server.')">Integrations</a>
+    </div>
+    <div class="panel settings-content">
+      <h3>Workspace preferences</h3><p>Set the defaults used throughout your reporting experience.</p>
+      <label>Workspace name<input id="setWorkspace" value="Amaya Distribution"></label>
+      <label>IMEI field name<input id="setImeiField" value="IMEI / Serial Number"></label>
+      <label>Reconciliation target (%)<input id="setTarget" type="number" value="98" min="1" max="100"></label>
+      <label>Stale source threshold (minutes)<input id="setStale" type="number" value="60" min="1" max="10080"></label>
+      <div class="modal-actions"><button class="btn btn-primary" onclick="saveSettings()"><i data-lucide="save"></i> Save changes</button></div>
+      <div class="form-note"><i data-lucide="lock-keyhole"></i> This demo stores data in your browser's local storage only. Clearing site data resets the workspace. No credentials or real company data should be entered.</div>
+      <div class="form-note" style="margin-top:10px"><i data-lucide="alert-triangle"></i> Resetting clears every imported record, source, and log entry stored in this browser.</div>
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="resetWorkspace()"><i data-lucide="rotate-ccw"></i> Reset demo data</button></div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer"><span>© 2026 Amaya Log Intelligence</span><span><span class="footer-dot"></span> Static demo · data in this browser <span class="footer-sep">·</span> <a href="#settings">Settings</a></span></footer>
+</section></main></div>
+
+<div class="toast" id="toast"><i data-lucide="check-circle-2"></i><span id="toastMessage">Done</span></div>
+<script src="assets/app.js"></script>
+</body></html>
