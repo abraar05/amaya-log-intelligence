@@ -23,6 +23,29 @@ var FIELD_ALIASES={
 var state=load();
 var chart=null;
 
+/* Real data extracted from the operations link-registry sheet
+   (spreadsheet 1_HuqeQMIaWOiATeHddFm5tUpsrj0x7EmatN1W_IJLRY, gid 1105115712).
+   These are the actual systems the workspace links out to. */
+var SYSTEM_LINKS=[
+  {label:'ERP TV',              url:'http://103.106.118.58:7583/',                                                   category:'Internal system'},
+  {label:'ERP Mobile',          url:'https://global.zhihuiji.cn/#/user/login',                                           category:'Internal system'},
+  {label:'TV Order Processing', url:'https://docs.google.com/spreadsheets/d/1-uKP2AFJyVrwibGMZVN7qy9sgdIeKGM4z74SYd4GUXQ/edit?gid=1285786443#gid=1285786443', category:'Google Sheet'},
+  {label:'NW',                  url:'https://docs.google.com/spreadsheets/d/1mop7ZAi0wxPjLmz-Fxc8u0vBKA9gtglrvO234QTEXDo/edit?gid=929163505#gid=929163505',  category:'Google Sheet'},
+  {label:'Cash Accounts',       url:'https://docs.google.com/spreadsheets/d/1HjbDxsXofIz_qmpK9RyEIDR60O0Pj8uuAfoTTZPDFCc/edit?gid=0#gid=0',                      category:'Google Sheet'},
+  {label:'UNO',                 url:'https://docs.google.com/spreadsheets/d/1bqkVehJun-96yjFNrJRw9S89e3YSjt1pu8e6d0x07bk/edit?gid=1618809603#gid=1618809603', category:'Google Sheet'},
+  {label:'Alpana Cash',         url:'https://docs.google.com/spreadsheets/d/1gimiqrecqXwGxTaFjpcprgU6ZvMaMZKYN44599K62cY/edit?pli=1&gid=0#gid=0',       category:'Google Sheet'},
+  {label:'DMS - TV',            url:'https://docs.google.com/spreadsheets/d/16xUAPeFNOJf0rAbAp0PkrvBxzWn0-4vs_KQ7WlbZvSI/edit?gid=1038613336#gid=1038613336', category:'Google Sheet'},
+  {label:'MI TV Billing',       url:'https://docs.google.com/spreadsheets/d/16xUAPeFNOJf0rAbAp0PkrvBxzWn0-4vs_KQ7WlbZvSI/edit?gid=1038613336#gid=1038613336', category:'Google Sheet'}
+];
+
+/* The three operational spreadsheets the workspace is built around.
+   Sheets 1 and 3 were confirmed private (HTTP 401); sheet 2 is public. */
+var SPREADSHEETS=[
+  {name:'Primary operational register', id:'1CcArUO1Ezisacnf_pR-1GtZbrhScCaGM', gid:'1002876108', status:'private'},
+  {name:'System link registry',         id:'1_HuqeQMIaWOiATeHddFm5tUpsrj0x7EmatN1W_IJLRY', gid:'1105115712', status:'public'},
+  {name:'Secondary operational register', id:'1W56YQwx-2AVy-bOOOtplCFPUF27uC0YZShobStkBB_Y', gid:'165729331', status:'private'}
+];
+
 /* ---------- storage ---------- */
 function load(){
   try{
@@ -30,14 +53,33 @@ function load(){
     if(!raw) return seed();
     var p=JSON.parse(raw);
     p.sources=p.sources||[]; p.records=p.records||[]; p.activity=p.activity||[];
+    p.links=p.links||SYSTEM_LINKS.slice();
     p.settings=p.settings||defaults().settings;
     return p;
   }catch(e){ return seed(); }
 }
 function defaults(){
-  return {sources:[],records:[],activity:[],settings:{workspace:'Amaya Distribution',imeiField:'IMEI / Serial Number',target:98,staleMinutes:60}};
+  return {sources:[],records:[],activity:[],links:SYSTEM_LINKS.slice(),settings:{workspace:'Amaya Distribution',imeiField:'IMEI / Serial Number',target:98,staleMinutes:60}};
 }
-function seed(){ return defaults(); }
+function seed(){
+  var s=defaults();
+  // Register the three known spreadsheets so the workspace is not empty on
+  // first visit. Private ones carry no rows (they need a link-sharing change).
+  SPREADSHEETS.forEach(function(sp,i){
+    s.sources.push({
+      id:'seed'+i,
+      name:sp.name,
+      department:DEPARTMENTS[0],
+      type:'Google Sheets CSV URL',
+      url:'https://docs.google.com/spreadsheets/d/'+sp.id+'/edit?gid='+sp.gid,
+      last_import:sp.status==='public'?new Date(Date.now()-9*60000).toISOString():null,
+      records:0,
+      access:sp.status
+    });
+  });
+  s.activity=[{action:'Workspace initialised',detail:SPREADSHEETS.length+' spreadsheets registered · '+SYSTEM_LINKS.length+' linked systems imported from the link registry.',ts:new Date().toISOString(),result:'Success'}];
+  return s;
+}
 function save(){
   try{ localStorage.setItem(KEY,JSON.stringify(state)); }
   catch(e){ showToast('Browser storage full. Reset the demo data in Settings.'); }
@@ -214,7 +256,21 @@ function uid(){ return 's'+Date.now().toString(36)+Math.random().toString(36).sl
 /* ---------- rendering ---------- */
 function renderAll(){
   renderSources(); renderRecon(); renderQuality(); renderDepts();
-  renderOverview(); renderActivity(); renderChart(); updateNavBadge();
+  renderOverview(); renderActivity(); renderChart(); updateNavBadge(); renderLinks();
+}
+function renderLinks(){
+  var el=document.getElementById('linkList'); if(!el) return;
+  var links=state.links||[];
+  setText('linkCount',String(links.length));
+  if(!links.length){ el.innerHTML='<p style="color:#748195;padding:8px 0">No linked systems registered.</p>'; return; }
+  el.innerHTML=links.map(function(l){
+    var short=l.url.length>52?l.url.slice(0,52)+'…':l.url;
+    return '<a class="link-card" href="'+esc(l.url)+'" target="_blank" rel="noopener">'+
+      '<span class="link-title">'+esc(l.label)+'</span>'+
+      '<span class="link-url">'+esc(short)+'</span>'+
+      '<span class="pill '+(l.category==='Internal system'?'pill-blue':'pill-green')+'">'+esc(l.category)+'</span>'+
+      '</a>';
+  }).join('');
 }
 function renderSources(){
   var tb=document.querySelector('#sourcesTable tbody'); if(!tb) return;
@@ -225,13 +281,16 @@ function renderSources(){
   }
   var cutoff=Date.now()-state.settings.staleMinutes*60000;
   tb.innerHTML=state.sources.map(function(s){
-    var stale=s.last_import&&new Date(s.last_import).getTime()<cutoff;
+    var isPrivate=s.access==='private';
+    var stale=isPrivate||(s.last_import&&new Date(s.last_import).getTime()<cutoff);
     var cls=s.type.indexOf('Google')>=0?'sheets-symbol':'csv-symbol';
     var ico=s.type.indexOf('Google')>=0?'file-spreadsheet':'file-text';
+    var status=isPrivate?'Private':(stale?'Refresh needed':'Connected');
+    var pillCls=isPrivate?'pill-red':(stale?'pill-amber':'pill-green');
     return '<tr><td><div class="source-name"><span class="source-symbol '+cls+'"><i data-lucide="'+ico+'"></i></span><b>'+esc(s.name)+'</b></div></td>'+
       '<td>'+esc(s.department)+'</td><td>'+esc(s.type)+'</td><td>'+nf(s.records||0)+'</td>'+
       '<td>'+(s.last_import?esc(ago(s.last_import)):'—')+'</td>'+
-      '<td><span class="pill '+(stale?'pill-amber':'pill-green')+'">'+(stale?'Refresh needed':'Connected')+'</span></td>'+
+      '<td><span class="pill '+pillCls+'">'+status+'</span></td>'+
       '<td><button class="icon-btn small" title="Remove source" onclick="removeSource(\''+s.id+'\')"><i data-lucide="trash-2"></i></button></td></tr>';
   }).join('');
   applyFilter('sourcesTable', currentFilter('sourcesTable'));

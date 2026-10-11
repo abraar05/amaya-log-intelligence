@@ -116,6 +116,9 @@
     <label class="dropzone" for="csvFile"><i data-lucide="cloud-upload"></i><b>Choose a CSV file to import</b><span>Export .xlsx to CSV first · Parsed locally in your browser</span><span class="btn btn-secondary">Browse files</span></label>
     <div id="fileInfo" class="file-info"></div>
   </div>
+  <div class="panel"><div class="panel-heading"><div><h3>Linked systems</h3><p>Imported from the operations link registry · <span id="linkCount">0</span> entries</p></div></div>
+    <div id="linkList" class="link-grid"></div>
+  </div>
   <div class="modal-backdrop" id="sourceModal">
     <div class="modal">
       <div class="modal-heading"><div><h3>Register a data source</h3><p>Connect a sheet or prepare a manual import.</p></div><button class="icon-btn" onclick="closeModal('sourceModal')"><i data-lucide="x"></i></button></div>
